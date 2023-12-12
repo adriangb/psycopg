@@ -5,7 +5,8 @@ Adapters for JSON types.
 # Copyright (C) 2020 The Psycopg Team
 
 import json
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing_extensions import TypeAliasType, TypeVar
 
 from .. import abc
 from .. import _oids
@@ -15,8 +16,14 @@ from ..adapt import Buffer, Dumper, Loader, PyFormat, AdaptersMap
 from ..errors import DataError
 from .._compat import cache
 
-JsonDumpsFunction = Callable[[Any], Union[str, bytes]]
-JsonLoadsFunction = Callable[[Union[str, bytes]], Any]
+
+JsonData = TypeAliasType(
+    'JsonData',
+    Union[Dict[str, 'JSONBData'], List['JSONBData'], str, int, float, bool, None,]
+)
+
+JsonDumpsFunction = Callable[[JsonData], Union[str, bytes]]
+JsonLoadsFunction = Callable[[Union[str, bytes]], JsonData]
 
 
 def set_json_dumps(
@@ -114,7 +121,7 @@ def _make_loader(base: Type[Loader], loads: JsonLoadsFunction) -> Type[Loader]:
 class _JsonWrapper:
     __slots__ = ("obj", "dumps")
 
-    def __init__(self, obj: Any, dumps: Optional[JsonDumpsFunction] = None):
+    def __init__(self, obj: JsonData, dumps: Optional[JsonDumpsFunction] = None):
         self.obj = obj
         self.dumps = dumps
 
